@@ -37,3 +37,10 @@ Instrumentation (minimal, privacy‑aware):
 - Do not store raw comment text; record safe metadata like `contentLength`, flags, status, and timing only
 
 This could be tied into an existing dashboard that the customers are already integrated with, or could be delivered as a standalone experience within the admin view
+
+
+## Setup instructions
+
+You can set this up using either docker using the makefile in /deploy, or you can manually run the application running `npm run dev` and `./slm-api/start.sh`
+
+I don't recommend running this yourself though because the model takes up a bunch of space and you'll have to clean up after.
