@@ -1,6 +1,6 @@
 # Kaia Peacock Takehome
 
-Live url - [https://moderation.peacock.dev/](https://moderation.peacock.dev/)
+Live url - [https://monster-topical-opossum.ngrok-free.app/](https://monster-topical-opossum.ngrok-free.app/)
 
 This is a take on a moderation system where I set up a small language model to flag comments, and implemented a basic shadowbanning system, where the poster will not see that their post has been moderated.
 
