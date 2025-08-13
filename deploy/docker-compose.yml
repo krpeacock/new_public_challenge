@@ -1,0 +1,65 @@
+version: "3.9"
+
+services:
+  slm-api:
+    image: ${REGISTRY_IMAGE_SLM_API:-slm-api:latest}
+    build:
+      context: ../slm-api
+      dockerfile: Dockerfile
+    environment:
+      - API_KEY=${SLM_API_KEY}
+      - MODEL_NAME=${SLM_MODEL_NAME:-Qwen/Qwen1.5-1.8B}
+      - TEST_MODE=0
+    volumes:
+      - slm-cache:/root/.cache/huggingface
+    restart: unless-stopped
+    networks:
+      - internal
+
+  web:
+    image: ${REGISTRY_IMAGE_WEB:-slm-web:latest}
+    build:
+      context: ../slm-chat-web/app
+      dockerfile: Dockerfile
+    depends_on:
+      - slm-api
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - SLM_API_URL=http://slm-api:8000
+      - SLM_API_KEY=${SLM_API_KEY}
+      - DATABASE_URL=file:./prisma/dev.db
+    volumes:
+      - app-db:/app/prisma
+    restart: unless-stopped
+    networks:
+      - internal
+
+  caddy:
+    image: caddy:2-alpine
+    depends_on:
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    environment:
+      - DOMAIN=${DOMAIN}
+    restart: unless-stopped
+    networks:
+      - internal
+
+volumes:
+  slm-cache:
+  app-db:
+  caddy-data:
+  caddy-config:
+
+networks:
+  internal:
+    driver: bridge
+
+

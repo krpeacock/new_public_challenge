@@ -1,0 +1,49 @@
+version: "3.9"
+
+services:
+  slm-api:
+    build:
+      context: ./slm-api
+      dockerfile: Dockerfile
+    environment:
+      - API_KEY=${SLM_API_KEY:-changeme}
+      - MODEL_NAME=${SLM_MODEL_NAME:-Qwen/Qwen1.5-1.8B}
+      - TEST_MODE=${SLM_TEST_MODE:-0}
+    ports:
+      - "8000:8000"
+    volumes:
+      - slm-cache:/root/.cache/huggingface
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8000/docs" ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  web:
+    build:
+      context: ./slm-chat-web/app
+      dockerfile: Dockerfile
+    depends_on:
+      slm-api:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - SLM_API_URL=http://slm-api:8000
+      - SLM_API_KEY=${SLM_API_KEY:-changeme}
+      - DATABASE_URL=file:./prisma/dev.db
+    ports:
+      - "3000:3000"
+    volumes:
+      - app-db:/app/prisma
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000" ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  slm-cache:
+  app-db:
+
+

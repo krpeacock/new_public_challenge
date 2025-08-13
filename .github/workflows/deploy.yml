@@ -1,0 +1,78 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_WEB: ${{ github.repository }}/slm-web
+      IMAGE_SLM: ${{ github.repository }}/slm-api
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push web
+        uses: docker/build-push-action@v6
+        with:
+          context: ./slm-chat-web/app
+          file: ./slm-chat-web/app/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/slm-web:latest
+            ghcr.io/${{ github.repository }}/slm-web:${{ github.sha }}
+
+      - name: Build and push slm-api
+        uses: docker/build-push-action@v6
+        with:
+          context: ./slm-api
+          file: ./slm-api/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/slm-api:latest
+            ghcr.io/${{ github.repository }}/slm-api:${{ github.sha }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Copy deploy files
+        run: |
+          rsync -az --delete -e "ssh -o StrictHostKeyChecking=no" deploy/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/slm-demo/
+
+      - name: Remote deploy
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "\
+            set -e; \
+            export DOMAIN='${{ secrets.DOMAIN }}'; \
+            export SLM_API_KEY='${{ secrets.SLM_API_KEY }}'; \
+            export SLM_MODEL_NAME='${{ vars.SLM_MODEL_NAME || 'Qwen/Qwen1.5-1.8B' }}'; \
+            export REGISTRY_IMAGE_WEB='ghcr.io/${{ github.repository }}/slm-web:latest'; \
+            export REGISTRY_IMAGE_SLM_API='ghcr.io/${{ github.repository }}/slm-api:latest'; \
+            cd /opt/slm-demo; \
+            docker compose --project-name slm-demo up -d --pull always --force-recreate; \
+            docker system prune -f; \
+          "
+
+
