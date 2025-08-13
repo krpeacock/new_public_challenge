@@ -1,6 +1,6 @@
 # Kaia Peacock Takehome
 
-Live url - [https://d0cc028ac3c4.ngrok-free.app/](https://d0cc028ac3c4.ngrok-free.app/)
+Live url - [https://moderation.peacock.dev/](https://moderation.peacock.dev/)
 
 This is a take on a moderation system where I set up a small language model to flag comments, and implemented a basic shadowbanning system, where the poster will not see that their post has been moderated.
 
@@ -44,3 +44,33 @@ This could be tied into an existing dashboard that the customers are already int
 You can set this up using either docker using the makefile in /deploy, or you can manually run the application running `npm run dev` and `./slm-api/start.sh`
 
 I don't recommend running this yourself though because the model takes up a bunch of space and you'll have to clean up after.
+
+## DNS Setup for Custom Domain
+
+To use your own domain (e.g., `moderation.peacock.dev`), you need to set up DNS records:
+
+1. **Add an A record** in your DNS provider:
+   - **Name**: `moderation` (or your desired subdomain)
+   - **Type**: `A`
+   - **Value**: `165.227.28.102` (your DigitalOcean droplet IP)
+   - **TTL**: `300` (or default)
+
+2. **Optional: Add CNAME for www** (if you want www.moderation.peacock.dev to work):
+   - **Name**: `www.moderation`
+   - **Type**: `CNAME`
+   - **Value**: `moderation.peacock.dev`
+   - **TTL**: `300`
+
+3. **Update the .env file** in the `/deploy` directory:
+   ```bash
+   DOMAIN=moderation.peacock.dev
+   SLM_API_KEY=your_api_key_here
+   ```
+
+4. **Deploy with Docker Compose**:
+   ```bash
+   cd deploy
+   docker-compose up -d
+   ```
+
+Caddy will automatically obtain and manage SSL certificates from Let's Encrypt for your domain.

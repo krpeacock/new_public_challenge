@@ -1,11 +1,20 @@
 {$DOMAIN} {
   encode zstd gzip
+  
+  # Handle API routes
   @api path /api/*
   handle @api {
-    reverse_proxy web:3000
+    reverse_proxy slm-api:8000
   }
+  
+  # Handle all other routes
   handle {
     reverse_proxy web:3000
+  }
+  
+  # Enable automatic HTTPS
+  tls {
+    on_demand
   }
 }
 
