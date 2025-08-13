@@ -17,6 +17,7 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+ENV PATH=/app/node_modules/.bin:$PATH
 
 COPY --from=builder /app/package.json /app/package-lock.json ./
 # Copy built artifacts and node_modules (including dev tools for prisma/ts-node)
@@ -36,6 +37,6 @@ RUN apk add --no-cache wget
 # Clear Node image's default entrypoint so we can run a shell
 ENTRYPOINT []
 
-CMD ["sh", "-lc", "npx prisma db push --skip-generate && npx ts-node prisma/seed.ts && npx next start -p $PORT"]
+CMD ["sh", "-lc", "npx prisma db push --skip-generate && npx ts-node prisma/seed.ts && npm run start -- -p $PORT"]
 
 
