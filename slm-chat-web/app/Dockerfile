@@ -36,6 +36,6 @@ RUN apk add --no-cache wget
 # Clear Node image's default entrypoint so we can run a shell
 ENTRYPOINT []
 
-CMD ["sh", "-lc", "npx prisma db push --skip-generate && npx ts-node prisma/seed.ts && next start -p $PORT"]
+CMD ["sh", "-lc", "npx prisma db push --skip-generate && npx ts-node prisma/seed.ts && npx next start -p $PORT"]
 
 
