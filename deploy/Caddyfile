@@ -1,4 +1,4 @@
-{$DOMAIN} {
+moderation.peacock.dev {
   encode zstd gzip
   
   # Handle API routes

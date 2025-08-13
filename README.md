@@ -61,16 +61,30 @@ To use your own domain (e.g., `moderation.peacock.dev`), you need to set up DNS 
    - **Value**: `moderation.peacock.dev`
    - **TTL**: `300`
 
-3. **Update the .env file** in the `/deploy` directory:
+3. **Set up SSL certificates** (run on your server):
    ```bash
-   DOMAIN=moderation.peacock.dev
-   SLM_API_KEY=your_api_key_here
+   cd /opt/new_public/deploy
+   
+   # Edit the email in setup-ssl.sh first
+   nano setup-ssl.sh
+   
+   # Make script executable and run it
+   chmod +x setup-ssl.sh
+   ./setup-ssl.sh
    ```
 
-4. **Deploy with Docker Compose**:
+4. **Create the .env file**:
    ```bash
-   cd deploy
+   cat > .env << 'EOF'
+   DOMAIN=moderation.peacock.dev
+   SLM_API_KEY=changeme
+   SLM_MODEL_NAME=Qwen/Qwen1.5-1.8B
+   EOF
+   ```
+
+5. **Deploy with Docker Compose**:
+   ```bash
    docker-compose up -d
    ```
 
-Caddy will automatically obtain and manage SSL certificates from Let's Encrypt for your domain.
+The setup script will automatically obtain SSL certificates from Let's Encrypt and configure auto-renewal.
