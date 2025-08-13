@@ -1,0 +1,88 @@
+import { getVisibleComments, addComment, flagComment } from './actions'
+import { prisma } from '@/lib/prisma'
+
+export default async function Home() {
+  // For demo purposes, we'll use a fixed user ID
+  // In a real app, this would come from authentication
+  const demoUserId = '1'
+  
+  const comments = await getVisibleComments(demoUserId)
+  const currentUser = await prisma.user.findUnique({
+    where: { id: demoUserId }
+  })
+
+  return (
+    <main className="min-h-screen p-8">
+      <article className="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow">
+        <h1 className="text-3xl font-serif mb-4">SF Chronicle: Housing Crisis</h1>
+        <div className="prose max-w-none mb-8">
+          <p>
+            Homelessness in San Francisco is a complex issue involving housing affordability, 
+            mental health services, and policy decisions. Recent data shows the city's homeless 
+            population has grown by 12% since last year, sparking renewed debate about potential 
+            solutions. What are your thoughts on addressing this challenging situation?
+          </p>
+        </div>
+
+        <section className="mt-12">
+          <h2 className="text-2xl font-serif mb-6">Comments</h2>
+          <div className="space-y-6">
+            <form 
+              action={async (formData: FormData) => {
+                'use server'
+                const content = formData.get('content') as string
+                if (content?.trim()) {
+                  await addComment(demoUserId, content)
+                }
+              }}
+              className="flex gap-4"
+            >
+              <input
+                type="text"
+                name="content"
+                placeholder="Add a comment..."
+                className="flex-1 rounded-md border border-gray-300 px-4 py-2"
+              />
+              <button
+                type="submit"
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+              >
+                Post
+              </button>
+            </form>
+
+            <div className="divide-y divide-gray-200">
+              {comments.map((comment) => (
+                <div key={comment.id} className="py-4">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{comment.author}</span>
+                    <span className="text-sm text-gray-500">
+                      {new Date(comment.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-gray-700">{comment.content}</p>
+                  {currentUser?.role === 'ADMIN' && (
+                    <form 
+                      action={async () => {
+                        'use server'
+                        await flagComment(comment.id, demoUserId)
+                      }}
+                      className="mt-2"
+                    >
+                      <button
+                        type="submit"
+                        className="text-sm text-red-600 hover:text-red-800"
+                      >
+                        Flag Comment
+                      </button>
+                    </form>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </article>
+    </main>
+  )
+}

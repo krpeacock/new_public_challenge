@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+transformers>=4.35.0
+torch
+accelerate
+python-dotenv

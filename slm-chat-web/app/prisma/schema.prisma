@@ -1,0 +1,43 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String    @id @default(cuid())
+  username String    @unique
+  role     UserRole  @default(USER)
+  comments Comment[]
+  actions  ModAction[]
+}
+
+model Comment {
+  id        String      @id @default(cuid())
+  content   String
+  authorId  String
+  author    User        @relation(fields: [authorId], references: [id])
+  createdAt DateTime    @default(now())
+  flags     ModAction[]
+}
+
+model ModAction {
+  id        String   @id @default(cuid())
+  type      String   // 'FLAG' or 'UNFLAG'
+  commentId String
+  comment   Comment  @relation(fields: [commentId], references: [id])
+  modId     String
+  mod       User     @relation(fields: [modId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
