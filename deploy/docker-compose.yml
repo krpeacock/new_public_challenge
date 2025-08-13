@@ -52,6 +52,19 @@ services:
     networks:
       - internal
 
+  ngrok:
+    image: ngrok/ngrok:latest
+    depends_on:
+      - web
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+    command: ["http", "--log=stdout", "--log-format=logfmt", "--host-header=rewrite", "web:3000"]
+    ports:
+      - "4040:4040" # ngrok web UI (optional)
+    restart: unless-stopped
+    networks:
+      - internal
+
 volumes:
   slm-cache:
   app-db:
